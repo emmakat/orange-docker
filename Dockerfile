@@ -14,12 +14,15 @@ ENV USER=orange \
 # Switch to root user to install necessary packages
 USER root
 
-# Install Python dependencies, Bzip2, Firefox-ESR, and other required tools
+# Switch to root user to install necessary packages
+USER root
+
+# Install Python dependencies, Bzip2, and other required tools
 RUN apt-get update && \
-    apt-get install -y python3-pip python3-dev python-virtualenv bzip2 g++ git sudo xfce4-terminal software-properties-common python-numpy firefox-esr && \
+    apt-get install -y python3-pip python3-dev python-virtualenv bzip2 g++ git sudo xfce4-terminal software-properties-common python-numpy firefox && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get remove -y --purge firefox
+    rm -rf /var/lib/apt/lists/*
+
 
 # Create user and set up permissions
 RUN useradd -m -s /bin/bash ${USER} && \
