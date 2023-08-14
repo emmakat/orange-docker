@@ -1,93 +1,60 @@
-# Orange docker #
+# Orange Data Mining Suite Docker Guide #
 
-Docker image for Orange Data Mining Suite.
+This guide provides instructions to run the Orange Data Mining Suite in Docker containers. Orange is an open-source data visualization and analysis tool for both novice and expert users. Running Orange in Docker containers on server infrastructure can provide scalability and ease of management.
 
-You can run Orange in docker containers on server infrastructure. Key benefits of this approach are:
-- Orange can have access to a greater amount of memory and processing power
-- It can be accessed from anywhere and can be run for an extended time without interruptions
-- Existing workflows can be shared with other people in real-time
+## Setup Guide ##
+Follow the instructions to create a basic Guacamole setup using Docker: [setup guide](https://www.linode.com/docs/guides/installing-apache-guacamole-through-docker/).
 
-We use the following technologies:
-- Docker containers
-- Remote access via RDP, VNC and SSH protocols.
-- Apache Guacamole as HTML front-end
-
-### Setup guide ###
-
-First, ensure that you have a docker installed. The following guide 
-contains instructions for ubuntu platform: [instructions](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-docker-ce).
-
-If you want to deploy a new system, follow this guide to create a basic 
-guacamole setup using official dockers: [setup guide](https://www.linode.com/docs/guides/installing-apache-guacamole-through-docker/)
-
-After that, create a common network and attach each of the 
-instances to the network.
+### Create a Common Network ###
+Connect each of the instances to the common network named `guacamole`.
 
 ```sh
-    docker network create guacamole
-    docker network connect guacamole example-mysql
-    docker network connect guacamole example-guacd
-    docker network connect guacamole example-guacamole
+docker network create guacamole
+docker network connect guacamole example-mysql
+docker network connect guacamole example-guacd
+docker network connect guacamole example-guacamole
 ```
+## Start Docker Container ##
 
-### Start docker container ###
+## When you have a working Guacamole environment, you can use the command below to spawn additional Orange remote desktop instances. Use the same command to create multiple remote desktop environments. Note that the tag should match the hostname in the web interface and must be unique for each instance.
 
-When you have a working guacamole environment, you can use this command to spawn 
-additional Orange remote desktop instances. 
-
-You can use the same command multiple times to create multiple remote desktop environments. Note that the tag is the same as the hostname 
-in the web interface and needs to be unique.
-
-
-```sh
-    tag=orange1
-    docker run --name $tag --link example-guacd:guacd --network=guacamole -d orangedm/orange-docker-vnc:v1.0
+```tag=orange1  # Define a unique tag for the instance
+docker run --name $tag --link example-guacd:guacd --network=guacamole -d orangedm/orange-docker-vnc:v1.0
 ```
-
-Change the user password and VNC password within the container. 
-```sh
-    docker exec -it $tag /bin/bash
-    passwd orange  # changes orange user password
-    vncpasswd  # changes password for vnc
+## Change Passwords ##
+### Change the user password and VNC password within the container. #[#3](https://github.com/biolab/orange-docker/issues/3) ###
+```docker exec -it $tag /bin/bash
+passwd orange  # changes orange user password
+vncpasswd      # changes password for vnc
 ```
+# Create Connection
 
-### Create connection ###
+Create connections for each Orange image via Settings -> Connections menu. Consult a detailed guide on Guacamole administration if needed. Here are the general steps:
 
-Admins must create new connections for each Orange image via Settings -> Connections menu. 
-Guacamole website contains [a detailed guide on Guacamole administration](https://guacamole.apache.org/doc/gug/administration.html).
+1. Open localhost:<port>/guacamole in a browser.
+2. Log in with default user guacadmin and password guacadmin. Remember to change these.
+3. Open Settings > Connections, click on New connection.
+4. Configure the connection parameters:
+   - Edit connections -> name: Display name for the dashboard
+   - Edit connections -> protocol: VNC
+   - Concurrency limits (both): Set as needed
+   - Parameters -> Network -> hostname: Equals to $tag
+   - Parameters -> Network -> port: 5901
+   - Parameters -> Authentication -> Username: orange
+   - Parameters -> Authentication -> Password: Password assigned previously
 
-In the browser, open localhost:<port>/guacamole, where the port is the value that you see PORTS section for guacamole container if you run  `docker ps`. 
+## Sharing Screen
 
-The first time you log in with the default user `guacadmin` and password `guacadmin`. Do not forget to change it.
+If you wish to share screens, follow these steps:
 
-Open Settings > Connections, and click on New connection.
+1. Go to Settings -> Connections.
+2. Click on New sharing profile. Name the profile.
+3. Check Read only if you want to restrict users to view only.
+4. Click Save.
 
-In general, at least these values need to be configured:
-- `Edit connections -> name`: Can be anything, this will be shown on the home dashboard
-- `Edit connections -> name`: ROOT
-- `Edit connections -> protocol`: VNC
-- `Concurrency limits (both)`: Default is 1, set this to higher value if you want to share connections with multiple users.
-- `Parameters -> Network -> hostname`: This equals to the $tag variable when creating instance or docker name. 
-- `Parameters -> Network -> port`: 5901
-- `Parameters -> Authentication -> Username`: orange
-- `Parameters -> Authentication -> Password`: <vnc password assinged in the previous section>
+## Stop Instances
 
-When a new connection is created, check that it is working by clicking on it from the guacamole home screen.
-
-### Sharing screen ###
-
-Go to `Settings -> Connections`.
-
-Click on the [+] sign left of the desktop you want to share with one-time 
-link. If there exists a Sharing profile for this desktop, you can skip this 
-step. Otherwise, click on the `New sharing profile`. Name the profile and check `Read only` if you want to restrict users to view only experience.
-
-Click Save. Now share button should be available from the Ctrl+Alt+Shift menu (when connected to the virtual machine).
-
-### Stop instances ###
-
-Use this command to stop the remote desktop instance.
-
-```sh
-    docker stop orange1
-```
+To stop the remote desktop instance, use:
+\`\`\`bash
+docker stop orange1
+\`\`\`
